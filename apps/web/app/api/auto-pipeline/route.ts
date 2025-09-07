@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         securityScan = true,
         promptRepair = true,
         createAdapter = true,
-        scenarioCount = 10,
+        scenarioCount = 18,
         evaluationProviders = ['groq'],
         repairFocusAreas = ['clarity', 'safety', 'performance'],
         securityAttackTypes = ['prompt_injection', 'data_exfiltration']

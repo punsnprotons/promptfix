@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createProject, getProjects } from '@/lib/database'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -16,6 +18,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { name, description, systemPrompt } = body
 
@@ -30,8 +37,7 @@ export async function POST(request: NextRequest) {
       name,
       description: description || null,
       system_prompt: systemPrompt,
-      // TODO: Add user_id when authentication is implemented
-      user_id: null
+      user_id: session.user.id
     })
 
     if (!project) {

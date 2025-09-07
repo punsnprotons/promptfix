@@ -260,9 +260,30 @@ Return a JSON array of scenarios with this structure:
         .replace(/\\"/g, '\\"') // Ensure quotes are properly escaped
         .replace(/""/g, '\\"') // Fix double quotes
       
-      const parsed = JSON.parse(cleanedOutput)
+      let parsed
+      try {
+        parsed = JSON.parse(cleanedOutput)
+      } catch (parseError) {
+        console.warn('Failed to parse cleaned JSON, trying additional cleaning:', parseError)
+        
+        // Additional fallback cleaning
+        try {
+          // Try removing any remaining invalid characters
+          const fallbackClean = cleanedOutput
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove all control characters
+            .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas more aggressively
+            .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1') // Remove invalid escape sequences
+            .trim()
+          
+          parsed = JSON.parse(fallbackClean)
+        } catch (fallbackError) {
+          console.warn('All JSON parsing attempts failed, using fallback scenarios')
+          // Return fallback scenarios instead of throwing
+          return this.generateFallbackScenarios(type, 3)
+        }
+      }
       
-      return this.convertToScenarios(parsed.scenarios || [], type)
+      return this.convertToScenarios(parsed.scenarios || parsed || [], type)
     } catch (error: any) {
       if (error.status === 429) {
         console.warn('Groq rate limit reached, using fallback scenarios')

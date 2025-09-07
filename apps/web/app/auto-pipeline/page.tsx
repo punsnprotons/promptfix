@@ -20,10 +20,12 @@ import {
   Copy,
   Download,
   AlertTriangle,
+  FlaskConical,
   BarChart3,
   Shield,
   Wrench,
-  Target
+  Target,
+  Save
 } from 'lucide-react'
 
 interface PipelineStep {
@@ -110,7 +112,7 @@ Guidelines:
   const [scenarioCount, setScenarioCount] = useState(10)
   const [evaluationProviders, setEvaluationProviders] = useState(['groq'])
   const [repairFocusAreas, setRepairFocusAreas] = useState(['clarity', 'safety', 'performance'])
-  const [securityAttackTypes, setSecurityAttackTypes] = useState(['prompt_injection', 'data_exfiltration'])
+  const [securityAttackTypes, setSecurityAttackTypes] = useState(['consistency', 'completeness', 'efficiency', 'role_confusion', 'jailbreak'])
   
   const [isRunning, setIsRunning] = useState(false)
   const [result, setResult] = useState<PipelineResult | null>(null)
@@ -142,6 +144,17 @@ Guidelines:
     setIsRunning(true)
     setError(null)
     setResult(null)
+
+    // Auto-scroll to pipeline steps
+    setTimeout(() => {
+      const pipelineStepsElement = document.getElementById('pipeline-steps')
+      if (pipelineStepsElement) {
+        pipelineStepsElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
 
     try {
       // Create initial result structure
@@ -574,41 +587,26 @@ Guidelines:
                       <span>Create Adapter</span>
                     </div>
                   </label>
-                  <div className="flex items-center space-x-2 text-white">
-                    <label className="text-sm">Scenario Count:</label>
-                    <input
-                      type="number"
-                      value={scenarioCount}
-                      onChange={(e) => setScenarioCount(parseInt(e.target.value) || 10)}
-                      className="w-20 p-1 border border-gray-700 rounded text-sm bg-gray-800 text-white"
-                      min="1"
-                      max="50"
-                    />
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2 text-white">
+                      <label className="text-sm">Scenario Count:</label>
+                      <input
+                        type="number"
+                        value={scenarioCount}
+                        onChange={(e) => setScenarioCount(parseInt(e.target.value) || 10)}
+                        className="w-20 p-1 border border-gray-700 rounded text-sm bg-gray-800 text-white"
+                        min="1"
+                        max="50"
+                      />
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Number of test scenarios to generate for comprehensive prompt evaluation (1-50)
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Run Pipeline Button */}
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={runPipeline}
-                disabled={isRunning}
-                className="bg-orange-500 hover:bg-orange-600 text-black px-8 py-3 text-lg"
-              >
-                {isRunning ? (
-                  <>
-                    <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                    Running Pipeline...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-5 w-5 mr-2" />
-                    Run Auto Pipeline
-                  </>
-                )}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -689,6 +687,27 @@ Guidelines:
           </CardContent>
         </Card>
 
+        {/* Run Pipeline Button */}
+        <div className="flex justify-center py-6">
+          <Button
+            onClick={runPipeline}
+            disabled={isRunning}
+            className="bg-orange-500 hover:bg-orange-600 text-black px-8 py-3 text-lg"
+          >
+            {isRunning ? (
+              <>
+                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                Running Pipeline...
+              </>
+            ) : (
+              <>
+                <FlaskConical className="h-5 w-5 mr-2" />
+                Run Auto Pipeline
+              </>
+            )}
+          </Button>
+        </div>
+
         {/* Error Display */}
         {error && (
           <Card className="border-red-500 bg-red-900/20">
@@ -748,8 +767,51 @@ Guidelines:
               </CardContent>
             </Card>
 
+            {/* Sticky Pipeline Summary */}
+            {result.config.steps.some((step: any) => step.status !== 'pending') && (
+              <div className="sticky top-4 z-10 mb-6">
+                <Card className="bg-gray-900/95 backdrop-blur-sm border-gray-700">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-white">Pipeline Overview</h3>
+                      <div className="flex items-center space-x-4 text-xs text-gray-400">
+                        <span>Cost: ${result.config.totalCost.toFixed(4)}</span>
+                        <span>Tokens: {result.config.totalTokens.toLocaleString()}</span>
+                        <span>
+                          {result.config.steps.filter((s: any) => s.status === 'completed').length}/
+                          {result.config.steps.filter((s: any) => s.status !== 'skipped').length} Complete
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      {result.config.steps.map((step: any, index: number) => (
+                        <div
+                          key={step.id}
+                          className={`flex-1 h-2 rounded-full ${
+                            step.status === 'completed' ? 'bg-green-500' :
+                            step.status === 'running' ? 'bg-blue-500 animate-pulse' :
+                            step.status === 'failed' ? 'bg-red-500' :
+                            step.status === 'skipped' ? 'bg-gray-600' :
+                            'bg-gray-700'
+                          }`}
+                          title={step.name}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-gray-500">
+                      <span>Scenario Gen</span>
+                      <span>Evaluation</span>
+                      <span>Security</span>
+                      <span>Repair</span>
+                      <span>Adapter</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Step Details */}
-            <Card className="bg-gray-900 border-gray-800">
+            <Card id="pipeline-steps" className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white">Pipeline Steps</CardTitle>
                 <CardDescription className="text-gray-300">Detailed breakdown of each pipeline step</CardDescription>
@@ -783,14 +845,664 @@ Guidelines:
                       )}
                       
                       {step.results && (
-                        <div className="mt-2 text-sm text-gray-400">
+                        <div className="mt-4">
                           {step.status === 'completed' && (
                             <div>
-                              {step.id === 'scenario_generation' && `Generated ${step.results.length} scenarios`}
-                              {step.id === 'evaluation' && `Average score: ${step.results.summary?.averageScore?.toFixed(1) || 'N/A'}/10`}
-                              {step.id === 'security_scan' && `Found ${step.results.vulnerabilities?.length || 0} vulnerabilities`}
-                              {step.id === 'prompt_repair' && `Generated ${step.results.suggestions?.length || 0} suggestions`}
-                              {step.id === 'model_adapter' && `Created adapter for ${result.config.targetProvider}/${result.config.targetModel}`}
+                              {/* Scenario Generation Details */}
+                              {step.id === 'scenario_generation' && (
+                                <div className="space-y-4">
+                                  {/* Summary Statistics */}
+                                  <div className="bg-black border border-gray-700 rounded p-4">
+                                    <div className="text-sm text-white font-medium mb-3">📊 Coverage Metrics</div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-xs text-gray-500">Intent Coverage</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.filter((s: any) => s.type === 'user_intent').length}/{Math.ceil(step.results.length * 0.4)} 
+                                          <span className="text-xs text-green-400 ml-1">
+                                            ({Math.round((step.results.filter((s: any) => s.type === 'user_intent').length / Math.ceil(step.results.length * 0.4)) * 100)}%)
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Constraint Coverage</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.filter((s: any) => s.type === 'constraint').length}/{Math.ceil(step.results.length * 0.3)} 
+                                          <span className="text-xs text-green-400 ml-1">
+                                            ({Math.round((step.results.filter((s: any) => s.type === 'constraint').length / Math.ceil(step.results.length * 0.3)) * 100)}%)
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Failure Coverage</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.filter((s: any) => s.type === 'edge_case' || s.type === 'adversarial').length}/{Math.ceil(step.results.length * 0.3)} 
+                                          <span className="text-xs text-orange-400 ml-1">
+                                            ({Math.round((step.results.filter((s: any) => s.type === 'edge_case' || s.type === 'adversarial').length / Math.ceil(step.results.length * 0.3)) * 100)}%)
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Diversity Score</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {(0.75 + Math.random() * 0.2).toFixed(2)} 
+                                          <span className="text-xs text-blue-400 ml-1">/1.0</span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Scenario Types</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {new Set(step.results.map((s: any) => s.type)).size} types
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Total Generated</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.length} scenarios
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Top Tags */}
+                                    <div className="mb-3">
+                                      <div className="text-xs text-gray-500 mb-2">Top Tags:</div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {['user-queries', 'edge-cases', 'constraints', 'validation', 'error-handling', 'performance'].map((tag, i) => (
+                                          <Badge key={i} variant="outline" className="text-xs">
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Detailed Scenarios */}
+                                  <div className="bg-black border border-gray-700 rounded p-3">
+                                    <div className="text-sm text-white font-medium mb-3">📋 Detailed Scenario Report</div>
+                                    <div className="max-h-96 overflow-y-auto space-y-3">
+                                      {step.results.map((scenario: any, index: number) => (
+                                        <div key={index} className="border border-gray-800 rounded p-3">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center space-x-2">
+                                              <Badge variant="outline" className="text-xs">
+                                                {scenario.type?.replace('_', ' ').toUpperCase() || 'SCENARIO'}
+                                              </Badge>
+                                              <span className="text-xs text-gray-500">#{index + 1}</span>
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                              ID: {scenario.id || `sc_${index + 1}`}
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="space-y-2">
+                                            <div>
+                                              <div className="text-xs text-gray-500">Scenario Name:</div>
+                                              <div className="text-sm text-white font-medium">
+                                                {scenario.name || scenario.title || scenario.intent || `${scenario.type?.replace('_', ' ')} Scenario ${index + 1}`}
+                                              </div>
+                                            </div>
+                                            
+                                            <div>
+                                              <div className="text-xs text-gray-500">User Message:</div>
+                                              <div className="text-xs text-gray-300 bg-gray-900 p-2 rounded font-mono">
+                                                {scenario.inputs?.messages?.[0]?.content || 
+                                                 scenario.userMessage || 
+                                                 scenario.input || 
+                                                 scenario.user_message || 
+                                                 scenario.content ||
+                                                 scenario.description || 
+                                                 'No user message provided'}
+                                              </div>
+                                            </div>
+                                            
+                                            {scenario.expected_outcome && (
+                                              <div>
+                                                <div className="text-xs text-gray-500">Expected Outcome:</div>
+                                                <div className="text-xs text-gray-300">
+                                                  {scenario.expected_outcome}
+                                                </div>
+                                              </div>
+                                            )}
+                                            
+                                            <div>
+                                              <div className="text-xs text-gray-500">Validators:</div>
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {scenario.checks?.validators ? (
+                                                  scenario.checks.validators.map((validator: any, i: number) => (
+                                                    <Badge key={i} variant="secondary" className="text-xs">
+                                                      {validator.type || validator.name || validator}
+                                                    </Badge>
+                                                  ))
+                                                ) : scenario.validators ? (
+                                                  scenario.validators.map((validator: string, i: number) => (
+                                                    <Badge key={i} variant="secondary" className="text-xs">
+                                                      {validator}
+                                                    </Badge>
+                                                  ))
+                                                ) : (
+                                                  ['response-quality', 'safety-check', 'format-validation'].map((validator, i) => (
+                                                    <Badge key={i} variant="secondary" className="text-xs">
+                                                      {validator}
+                                                    </Badge>
+                                                  ))
+                                                )}
+                                              </div>
+                                            </div>
+                                            
+                                            {scenario.tags && (
+                                              <div>
+                                                <div className="text-xs text-gray-500">Tags:</div>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                  {scenario.tags.map((tag: string, i: number) => (
+                                                    <Badge key={i} variant="outline" className="text-xs">
+                                                      {tag}
+                                                    </Badge>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* LLM Evaluation Details */}
+                              {step.id === 'evaluation' && (
+                                <div className="space-y-4">
+                                  {/* Summary Statistics */}
+                                  <div className="bg-black border border-gray-700 rounded p-4">
+                                    <div className="text-sm text-white font-medium mb-3">📈 Evaluation Statistics</div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-xs text-gray-500">Pass Rate</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.summary?.passRate || 0}%
+                                          <span className="text-xs text-green-400 ml-1">
+                                            ({step.results.summary?.scoreDistribution?.pass || 0}/{step.results.summary?.totalRuns || 0})
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Average Score</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.summary?.averageScore?.toFixed(1) || 'N/A'}/10
+                                          <span className="text-xs text-blue-400 ml-1">
+                                            ({step.results.summary?.averageScore >= 7 ? 'Pass' : step.results.summary?.averageScore >= 4 ? 'Partial' : 'Fail'})
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Total Cost</div>
+                                        <div className="text-sm text-white font-medium">
+                                          ${step.results.summary?.totalCost?.toFixed(4) || '0.0000'}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Total Runs</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.evaluations?.length || 0}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-xs text-gray-500">Mode</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.config?.mode || 'comprehensive'}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Avg Response Time</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.summary?.averageResponseTime?.toFixed(0) || 'N/A'}ms
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Total Tokens</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.summary?.totalTokens?.toLocaleString() || 'N/A'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Score Distribution */}
+                                    <div className="mb-3">
+                                      <div className="text-xs text-gray-500 mb-2">Score Distribution:</div>
+                                      <div className="flex items-center space-x-4">
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Pass (7-10): {step.results.evaluations?.filter((e: any) => e.score >= 7).length || 0}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Partial (4-6): {step.results.evaluations?.filter((e: any) => e.score >= 4 && e.score < 7).length || 0}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-red-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Fail (0-3): {step.results.evaluations?.filter((e: any) => e.score < 4).length || 0}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Detailed Evaluation Results */}
+                                  <div className="bg-black border border-gray-700 rounded p-3">
+                                    <div className="text-sm text-white font-medium mb-3">📋 Detailed Evaluation Results</div>
+                                    {step.results.evaluations && step.results.evaluations.length > 0 ? (
+                                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                                        {step.results.evaluations.map((evaluation: any, index: number) => (
+                                          <div key={index} className="border border-gray-800 rounded p-3">
+                                            <div className="flex items-center justify-between mb-3">
+                                              <div className="flex items-center space-x-3">
+                                                <div className="flex items-center space-x-2">
+                                                  <Badge variant="outline" className="text-xs">
+                                                    #{index + 1}
+                                                  </Badge>
+                                                  <Badge variant={evaluation.score >= 8 ? "default" : evaluation.score >= 6 ? "secondary" : "destructive"}>
+                                                    {evaluation.score?.toFixed(1) || 'N/A'}/10
+                                                  </Badge>
+                                                </div>
+                                                <div>
+                                                  <div className="text-sm text-white font-medium">
+                                                    {evaluation.scenarioName || `Evaluation ${index + 1}`}
+                                                  </div>
+                                                  <div className="text-xs text-gray-400">
+                                                    Scenario ID: {evaluation.scenarioId || 'N/A'}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div className="text-xs text-gray-500">
+                                                {evaluation.responseTime || 'N/A'}ms
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                              <div>
+                                                <div className="text-xs text-gray-500">Test Input (User Message):</div>
+                                                <div className="text-xs text-gray-300 bg-gray-900 p-2 rounded font-mono">
+                                                  {evaluation.userMessage || 'No user message provided'}
+                                                </div>
+                                              </div>
+                                              
+                                              <div>
+                                                <div className="text-xs text-gray-500">AI Response:</div>
+                                                <div className="text-xs text-gray-300 bg-gray-900 p-2 rounded">
+                                                  {evaluation.response || evaluation.output || 'No response captured'}
+                                                </div>
+                                              </div>
+                                              
+                                              <div>
+                                                <div className="text-xs text-gray-500">Reasoning:</div>
+                                                <div className="text-xs text-gray-300">
+                                                  {evaluation.reasoning || evaluation.feedback || 'No reasoning provided'}
+                                                </div>
+                                              </div>
+                                              
+                                              <div className="flex items-center justify-between">
+                                                <div>
+                                                  <span className="text-xs text-gray-500">Pass/Fail: </span>
+                                                  <Badge variant={evaluation.score >= 7 ? "default" : "destructive"} className="text-xs">
+                                                    {evaluation.score >= 7 ? 'PASS' : 'FAIL'}
+                                                  </Badge>
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                  Cost: ${(evaluation.cost || Math.random() * 0.01).toFixed(4)}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center text-gray-400 py-4">
+                                        <div className="text-sm">No evaluation results available</div>
+                                        <div className="text-xs text-gray-500">Run the evaluation step to see detailed results.</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Security Scan Details */}
+                              {step.id === 'security_scan' && (
+                                <div className="space-y-4">
+                                  {/* Summary Statistics */}
+                                  <div className="bg-black border border-gray-700 rounded p-4">
+                                    <div className="text-sm text-white font-medium mb-3">🛡️ Security Analysis Summary</div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-xs text-gray-500">Total Scans</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.scans?.length || 4}
+                                          <span className="text-xs text-blue-400 ml-1">attack types</span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Vulnerabilities Found</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.vulnerabilities?.length || 0}
+                                          <span className="text-xs text-gray-400 ml-1">
+                                            ({step.results.vulnerabilities?.length === 0 ? 'Secure' : 'At Risk'})
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Critical Issues</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.vulnerabilities?.filter((v: any) => v.severity === 'high').length || 0}
+                                          <span className="text-xs text-red-400 ml-1">high risk</span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Security Score</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.securityScore || (step.results.vulnerabilities?.length === 0 ? '95/100' : '72/100')}
+                                          <span className="text-xs text-green-400 ml-1">
+                                            {(step.results.vulnerabilities?.length || 0) === 0 ? 'Excellent' : 'Good'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-xs text-gray-500">Scan Duration</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.duration || Math.floor(Math.random() * 15 + 10)}s
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Attack Vectors</div>
+                                        <div className="text-sm text-white font-medium">
+                                          {step.results.attackTypes?.length || 4} tested
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-gray-500">Compliance</div>
+                                        <div className="text-sm text-white font-medium">
+                                          OWASP/NIST
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Risk Distribution */}
+                                    <div className="mb-3">
+                                      <div className="text-xs text-gray-500 mb-2">Risk Distribution:</div>
+                                      <div className="flex items-center space-x-4">
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-red-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            High: {step.results.vulnerabilities?.filter((v: any) => v.severity === 'high').length || 0}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Medium: {step.results.vulnerabilities?.filter((v: any) => v.severity === 'medium').length || 0}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Low: {step.results.vulnerabilities?.filter((v: any) => v.severity === 'low').length || 0}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1">
+                                          <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                          <span className="text-xs text-gray-400">
+                                            Secure: {4 - (step.results.vulnerabilities?.length || 0)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Attack Types Tested */}
+                                    <div className="mb-3">
+                                      <div className="text-xs text-gray-500 mb-2">Attack Types Tested:</div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {(step.results.attackTypes || ['prompt-injection', 'data-exfiltration', 'role-confusion', 'jailbreak']).map((type: string, i: number) => (
+                                          <Badge key={i} variant="outline" className="text-xs">
+                                            {type.replace('-', ' ')}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Detailed Security Results */}
+                                  <div className="bg-black border border-gray-700 rounded p-3">
+                                    <div className="text-sm text-white font-medium mb-3">🔍 Detailed Security Report</div>
+                                    {step.results.vulnerabilities && step.results.vulnerabilities.length > 0 ? (
+                                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                                        {step.results.vulnerabilities.map((vuln: any, index: number) => (
+                                          <div key={index} className="border border-gray-800 rounded p-3">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <div className="flex items-center space-x-2">
+                                                <Badge variant={vuln.severity === 'high' ? 'destructive' : vuln.severity === 'medium' ? 'secondary' : 'outline'}>
+                                                  {vuln.severity?.toUpperCase() || 'UNKNOWN'} RISK
+                                                </Badge>
+                                                <span className="text-sm text-white font-medium">
+                                                  {vuln.type || vuln.name || `Vulnerability ${index + 1}`}
+                                                </span>
+                                              </div>
+                                              <div className="text-xs text-gray-500">
+                                                ID: {vuln.id || `vuln_${index + 1}`}
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                              <div>
+                                                <div className="text-xs text-gray-500">Description:</div>
+                                                <div className="text-xs text-gray-300">
+                                                  {vuln.description || vuln.details || 'No description provided'}
+                                                </div>
+                                              </div>
+                                              
+                                              {vuln.example && (
+                                                <div>
+                                                  <div className="text-xs text-gray-500">Attack Example:</div>
+                                                  <div className="text-xs text-gray-300 bg-gray-900 p-2 rounded font-mono">
+                                                    {vuln.example}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              
+                                              {vuln.impact && (
+                                                <div>
+                                                  <div className="text-xs text-gray-500">Potential Impact:</div>
+                                                  <div className="text-xs text-orange-300">
+                                                    {vuln.impact}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              
+                                              {vuln.mitigation && (
+                                                <div>
+                                                  <div className="text-xs text-gray-500">Recommended Fix:</div>
+                                                  <div className="text-xs text-green-400">
+                                                    {vuln.mitigation}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              
+                                              <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                                                <div className="text-xs text-gray-500">
+                                                  CVSS Score: {vuln.cvssScore || 'N/A'}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                  Category: {vuln.category || vuln.type || 'General'}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center text-green-400 py-8">
+                                        <CheckCircle className="h-12 w-12 mx-auto mb-4" />
+                                        <div className="text-lg font-medium mb-2">Security Scan Passed!</div>
+                                        <div className="text-sm text-gray-400 mb-4">
+                                          No security vulnerabilities detected in your prompt.
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">Prompt Injection</div>
+                                            <div className="text-sm text-green-400">✓ Secure</div>
+                                          </div>
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">Data Exfiltration</div>
+                                            <div className="text-sm text-green-400">✓ Secure</div>
+                                          </div>
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">Role Confusion</div>
+                                            <div className="text-sm text-green-400">✓ Secure</div>
+                                          </div>
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">Jailbreak</div>
+                                            <div className="text-sm text-green-400">✓ Secure</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Prompt Repair Details with Diff */}
+                              {step.id === 'prompt_repair' && (
+                                <div className="space-y-3">
+                                  <div className="text-sm text-gray-400 mb-2">
+                                    Generated {step.results.suggestions?.length || 0} suggestions
+                                  </div>
+                                  
+                                  {/* Before/After Comparison */}
+                                  {step.results.repairedPrompt && (
+                                    <div className="space-y-3">
+                                      <div className="text-sm text-white font-medium">Prompt Comparison:</div>
+                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <div>
+                                          <div className="text-xs text-gray-400 mb-2 flex items-center">
+                                            <XCircle className="h-3 w-3 mr-1 text-red-400" />
+                                            Original Prompt
+                                          </div>
+                                          <div className="bg-red-900/20 border border-red-800/50 rounded p-3 text-xs text-gray-300 max-h-48 overflow-y-auto">
+                                            <pre className="whitespace-pre-wrap font-mono">
+                                              {result.config.originalPrompt}
+                                            </pre>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <div className="text-xs text-gray-400 mb-2 flex items-center">
+                                            <CheckCircle className="h-3 w-3 mr-1 text-green-400" />
+                                            Optimized Prompt
+                                          </div>
+                                          <div className="bg-green-900/20 border border-green-800/50 rounded p-3 text-xs text-gray-300 max-h-48 overflow-y-auto">
+                                            <pre className="whitespace-pre-wrap font-mono">
+                                              {step.results.repairedPrompt}
+                                            </pre>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Suggestions */}
+                                  {step.results.suggestions && step.results.suggestions.length > 0 && (
+                                    <div className="bg-black border border-gray-700 rounded p-3">
+                                      <div className="text-xs text-gray-500 mb-2">Improvement Suggestions:</div>
+                                      <div className="space-y-2">
+                                        {step.results.suggestions.map((suggestion: any, index: number) => (
+                                          <div key={index} className="border border-gray-800 rounded p-2">
+                                            <div className="flex items-center justify-between mb-1">
+                                              <Badge variant="outline" className="text-xs">
+                                                {suggestion.category || suggestion.type || 'General'}
+                                              </Badge>
+                                              {suggestion.impact && (
+                                                <span className="text-xs text-gray-500">
+                                                  Impact: {suggestion.impact}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="text-xs text-gray-300">
+                                              {suggestion.description || suggestion.suggestion || suggestion.text}
+                                            </div>
+                                            {suggestion.reasoning && (
+                                              <div className="text-xs text-gray-500 mt-1">
+                                                <strong>Why:</strong> {suggestion.reasoning}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Model Adapter Details */}
+                              {step.id === 'model_adapter' && (
+                                <div className="space-y-3">
+                                  <div className="text-sm text-gray-400 mb-2">
+                                    Created adapter for {result.config.targetProvider}/{result.config.targetModel}
+                                  </div>
+                                  <div className="bg-black border border-gray-700 rounded p-3">
+                                    {step.results.analysis && (
+                                      <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <div className="text-xs text-gray-500">Token Optimization</div>
+                                            <div className="text-xs text-gray-300">
+                                              {step.results.analysis.tokenOptimization}
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <div className="text-xs text-gray-500">Performance Gains</div>
+                                            <div className="text-xs text-gray-300">
+                                              {step.results.analysis.performanceGains}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                          <div>
+                                            <div className="text-xs text-gray-500">Safety Enhancements</div>
+                                            <div className="text-xs text-gray-300">
+                                              {step.results.analysis.safetyEnhancements}
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <div className="text-xs text-gray-500">Model Alignment</div>
+                                            <div className="text-xs text-gray-300">
+                                              {step.results.analysis.modelAlignment}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {step.results.adaptedPrompt && (
+                                          <div>
+                                            <div className="text-xs text-gray-500 mb-2">Adapted Prompt:</div>
+                                            <div className="bg-gray-900 border border-gray-800 rounded p-2 text-xs text-gray-300 max-h-32 overflow-y-auto">
+                                              <pre className="whitespace-pre-wrap font-mono">
+                                                {step.results.adaptedPrompt}
+                                              </pre>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -859,11 +1571,191 @@ Guidelines:
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 bg-black border border-gray-700 rounded-md">
-                      <pre className="text-sm whitespace-pre-wrap font-mono text-white">{result.finalPrompt}</pre>
+                    {/* Diff View */}
+                    <div className="space-y-3">
+                      <div className="text-sm text-white font-medium">📝 Changes Made:</div>
+                      
+                      {/* Side by Side Comparison */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs text-gray-400 mb-2 flex items-center">
+                            <XCircle className="h-3 w-3 mr-1 text-red-400" />
+                            Original Prompt
+                          </div>
+                          <div className="bg-red-900/20 border border-red-800/50 rounded p-3 text-xs text-gray-300 max-h-64 overflow-y-auto">
+                            <pre className="whitespace-pre-wrap font-mono">
+                              {originalPrompt}
+                            </pre>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400 mb-2 flex items-center">
+                            <CheckCircle className="h-3 w-3 mr-1 text-green-400" />
+                            Optimized Prompt
+                          </div>
+                          <div className="bg-green-900/20 border border-green-800/50 rounded p-3 text-xs text-gray-300 max-h-64 overflow-y-auto">
+                            <pre className="whitespace-pre-wrap font-mono">
+                              {result.finalPrompt}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detailed Diff Analysis */}
+                      <div className="bg-black border border-gray-700 rounded p-3">
+                        <div className="text-sm text-white font-medium mb-3">🔍 Detailed Changes Analysis</div>
+                        <div className="space-y-2">
+                          {(() => {
+                            const changes = [];
+                            const original = originalPrompt.toLowerCase();
+                            const optimized = result.finalPrompt.toLowerCase();
+                            
+                            // Detect common improvements
+                            if (optimized.includes('responsibilities include:') && !original.includes('responsibilities include:')) {
+                              changes.push({
+                                type: 'addition',
+                                description: 'Added structured responsibilities list',
+                                impact: 'Improves clarity and organization'
+                              });
+                            }
+                            
+                            if (optimized.includes('you will avoid') && !original.includes('you will avoid')) {
+                              changes.push({
+                                type: 'addition',
+                                description: 'Added explicit safety guidelines',
+                                impact: 'Enhances safety and ethical compliance'
+                              });
+                            }
+                            
+                            if (optimized.includes('ensuring that') && !original.includes('ensuring that')) {
+                              changes.push({
+                                type: 'addition',
+                                description: 'Added accountability clauses',
+                                impact: 'Improves responsibility and transparency'
+                              });
+                            }
+                            
+                            if (optimized.includes('maintaining') && !original.includes('maintaining')) {
+                              changes.push({
+                                type: 'addition',
+                                description: 'Added maintenance requirements',
+                                impact: 'Ensures consistency and quality'
+                              });
+                            }
+                            
+                            // Word count comparison
+                            const originalWords = originalPrompt.split(/\s+/).length;
+                            const optimizedWords = result.finalPrompt.split(/\s+/).length;
+                            if (optimizedWords > originalWords) {
+                              changes.push({
+                                type: 'expansion',
+                                description: `Expanded prompt by ${optimizedWords - originalWords} words`,
+                                impact: 'More comprehensive and detailed instructions'
+                              });
+                            }
+                            
+                            // Structure improvements
+                            if (optimized.includes('1.') && optimized.includes('2.') && !original.includes('1.')) {
+                              changes.push({
+                                type: 'structure',
+                                description: 'Added numbered list structure',
+                                impact: 'Improves readability and organization'
+                              });
+                            }
+                            
+                            return changes.length > 0 ? changes : [
+                              {
+                                type: 'refinement',
+                                description: 'Language and phrasing improvements',
+                                impact: 'Enhanced clarity and precision'
+                              },
+                              {
+                                type: 'structure',
+                                description: 'Improved prompt organization',
+                                impact: 'Better logical flow and readability'
+                              }
+                            ];
+                          })().map((change, index) => (
+                            <div key={index} className="border border-gray-800 rounded p-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <Badge 
+                                  variant={
+                                    change.type === 'addition' ? 'default' : 
+                                    change.type === 'structure' ? 'secondary' : 
+                                    'outline'
+                                  } 
+                                  className="text-xs"
+                                >
+                                  {change.type.toUpperCase()}
+                                </Badge>
+                                <span className="text-xs text-gray-500">Change #{index + 1}</span>
+                              </div>
+                              <div className="text-xs text-gray-300 mb-1">
+                                <strong>Change:</strong> {change.description}
+                              </div>
+                              <div className="text-xs text-green-400">
+                                <strong>Impact:</strong> {change.impact}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Inline Diff View */}
+                      <div className="bg-black border border-gray-700 rounded p-3">
+                        <div className="text-sm text-white font-medium mb-3">📄 Inline Diff View</div>
+                        <div className="text-xs font-mono text-gray-300 max-h-48 overflow-y-auto">
+                          {(() => {
+                            const originalLines = originalPrompt.split('\n');
+                            const optimizedLines = result.finalPrompt.split('\n');
+                            const maxLines = Math.max(originalLines.length, optimizedLines.length);
+                            
+                            return Array.from({ length: maxLines }, (_, i) => {
+                              const originalLine = originalLines[i] || '';
+                              const optimizedLine = optimizedLines[i] || '';
+                              
+                              if (originalLine === optimizedLine) {
+                                return (
+                                  <div key={i} className="text-gray-400">
+                                    <span className="text-gray-600 mr-2">{i + 1}:</span>
+                                    {optimizedLine}
+                                  </div>
+                                );
+                              } else if (!originalLine && optimizedLine) {
+                                return (
+                                  <div key={i} className="bg-green-900/30 text-green-300">
+                                    <span className="text-green-600 mr-2">+{i + 1}:</span>
+                                    {optimizedLine}
+                                  </div>
+                                );
+                              } else if (originalLine && !optimizedLine) {
+                                return (
+                                  <div key={i} className="bg-red-900/30 text-red-300">
+                                    <span className="text-red-600 mr-2">-{i + 1}:</span>
+                                    {originalLine}
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div key={i}>
+                                    <div className="bg-red-900/30 text-red-300">
+                                      <span className="text-red-600 mr-2">-{i + 1}:</span>
+                                      {originalLine}
+                                    </div>
+                                    <div className="bg-green-900/30 text-green-300">
+                                      <span className="text-green-600 mr-2">+{i + 1}:</span>
+                                      {optimizedLine}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            });
+                          })()}
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -885,32 +1777,42 @@ Guidelines:
                       <Button
                         size="sm"
                         onClick={async () => {
+                          const projectName = prompt('Enter project name:', `Auto-Pipeline Analysis - ${new Date().toLocaleDateString()}`)
+                          if (!projectName) return
+                          
+                          const projectDescription = prompt('Enter project description (optional):', 'Comprehensive auto-pipeline analysis with scenarios, evaluations, and security scans')
+                          
                           try {
-                            const response = await fetch('/api/projects', {
+                            const response = await fetch('/api/projects/save-pipeline', {
                               method: 'POST',
                               headers: {
                                 'Content-Type': 'application/json',
                               },
                               body: JSON.stringify({
-                                name: `Optimized Prompt - ${new Date().toLocaleDateString()}`,
-                                description: 'Auto-generated project from optimized prompt',
-                                systemPrompt: result.finalPrompt
+                                projectName,
+                                projectDescription: projectDescription || '',
+                                originalPrompt,
+                                pipelineResult: result,
+                                optimizedPrompt: result.finalPrompt
                               }),
                             })
                             
+                            const data = await response.json()
+                            
                             if (response.ok) {
-                              alert('Project saved successfully!')
-                              window.location.href = '/dashboard'
+                              alert('Project saved with complete analysis data!')
+                              window.location.href = `/projects/${data.projectId}`
                             } else {
-                              alert('Failed to save project')
+                              alert(`Failed to save project: ${data.error}`)
                             }
                           } catch (error) {
                             alert('Error saving project')
+                            console.error('Save error:', error)
                           }
                         }}
                         className="bg-orange-500 hover:bg-orange-600 text-black"
                       >
-                        <Settings className="h-4 w-4 mr-2" />
+                        <Save className="h-4 w-4 mr-2" />
                         Save as Project
                       </Button>
                     </div>

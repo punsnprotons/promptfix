@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, X } from 'lucide-react'
@@ -12,8 +13,10 @@ interface CreateProjectModalProps {
 }
 
 export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }: CreateProjectModalProps) {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [systemPrompt, setSystemPrompt] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +33,8 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
         },
         body: JSON.stringify({
           name,
-          description
+          description,
+          systemPrompt
         }),
       })
 
@@ -43,7 +47,11 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
       onProjectCreated(data.data)
       setName('')
       setDescription('')
+      setSystemPrompt('')
       onClose()
+      
+      // Redirect to the project page
+      router.push(`/projects/${data.data.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -55,53 +63,64 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="max-w-md w-full">
+      <Card className="max-w-2xl w-full bg-gray-900 border-gray-800">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Create New Project</CardTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <CardTitle className="text-white">Create New Project</CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <CardDescription>
-            Create a new system prompt analysis project
+          <CardDescription className="text-gray-300">
+            Create a new system prompt analysis project with your prompt
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Project Name</label>
+              <label className="block text-sm font-medium mb-2 text-white">Project Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-2 border rounded-md"
+                className="w-full p-3 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 placeholder="Enter project name..."
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
+              <label className="block text-sm font-medium mb-2 text-white">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded-md h-20 resize-none"
+                className="w-full p-3 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 h-20 resize-none"
                 placeholder="Describe your project..."
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-2 text-white">System Prompt</label>
+              <textarea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                className="w-full p-3 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 h-32 resize-none"
+                placeholder="Enter your system prompt here..."
+                required
+              />
+            </div>
+
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-700 text-sm">{error}</p>
+              <div className="p-3 bg-red-900/20 border border-red-500 rounded-md">
+                <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating}>
+              <Button type="submit" disabled={isCreating} className="bg-orange-500 hover:bg-orange-600 text-black">
                 {isCreating ? 'Creating...' : 'Create Project'}
               </Button>
             </div>

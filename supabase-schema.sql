@@ -154,7 +154,31 @@ CREATE POLICY "Users can update evaluation runs for their projects" ON evaluatio
         )
     );
 
+-- Pipeline runs table for tracking complete auto-pipeline executions
+CREATE TABLE pipeline_runs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    config JSONB,
+    status TEXT DEFAULT 'completed',
+    summary JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for pipeline_runs
+ALTER TABLE pipeline_runs ENABLE ROW LEVEL SECURITY;
+
 -- Similar policies for other tables
+CREATE POLICY "Users can manage pipeline runs for their projects" ON pipeline_runs
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM projects 
+            WHERE projects.id = pipeline_runs.project_id 
+            AND projects.user_id = auth.uid()
+        )
+    );
+
 CREATE POLICY "Users can manage scenario suites for their projects" ON scenario_suites
     FOR ALL USING (
         EXISTS (

@@ -5,32 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, BarChart3, Shield, Zap, ArrowRight, Shuffle, Play } from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { Plus, BarChart3, Shield, Zap, ArrowRight, Shuffle, FlaskConical } from 'lucide-react'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-black/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-black" />
-              </div>
-              <h1 className="text-xl font-bold text-white">PromptFix</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" asChild className="text-gray-300 hover:text-white hover:bg-gray-800">
-                <Link href="/auth/signin">Sign In</Link>
-              </Button>
-              <Button asChild className="bg-orange-500 hover:bg-orange-600 text-black">
-                <Link href="/auth/signup">Get Started</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">
@@ -109,7 +91,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <FlaskConical className="h-4 w-4 mr-2" />
                   Start Auto Pipeline Analysis
                 </Button>
               </div>

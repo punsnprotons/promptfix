@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, BarChart3, Shield, Zap, ArrowRight, Clock, CheckCircle, XCircle, Wrench, Settings } from 'lucide-react'
 import CreateProjectModal from '@/components/CreateProjectModal'
+import { Navigation } from '@/components/Navigation'
 import { getProjects, type Project } from '@/lib/database'
 
 // Remove the old interface since we're importing it from database.ts
@@ -81,27 +82,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-black">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-black" />
-              </div>
-              <h1 className="text-xl font-bold text-white">System Prompt Tool</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-                Settings
-              </Button>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-black">
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         {/* Stats Overview */}
@@ -168,7 +149,8 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold mb-4 text-white">Your Projects</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow bg-gray-900 border-gray-800">
+              <Link key={project.id} href={`/projects/${project.id}`}>
+                <Card className="hover:shadow-lg transition-shadow bg-gray-900 border-gray-800 cursor-pointer hover:border-orange-500/50">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -177,7 +159,7 @@ export default function DashboardPage() {
                         {project.description}
                       </CardDescription>
                     </div>
-                    {project.evalRuns[0] && getStatusIcon(project.evalRuns[0].status)}
+                    {project._count?.evalRuns > 0 && getStatusIcon('completed')}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -203,16 +185,14 @@ export default function DashboardPage() {
                     )}
 
                     <div className="pt-2">
-                      <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-black">
-                        <Link href={`/projects/${project.id}`}>
-                          View Project
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <div className="text-center text-sm text-gray-400">
+                        Click to view project details
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))}
 
             {/* Create New Project Card */}

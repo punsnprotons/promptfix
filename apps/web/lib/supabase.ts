@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://snueibsroydrfsrwfzrl.supabase.co'
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNudWVpYnNyb3lkcmZzcndmenJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMjg3MjksImV4cCI6MjA3MjgwNDcyOX0.NrETAQvPgDp6rErdUhzSZTCz2JBFbV5YQF_ZV29TirI'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://snueibsroydrfsrwfzrl.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNudWVpYnNyb3lkcmZzcndmenJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMjg3MjksImV4cCI6MjA3MjgwNDcyOX0.NrETAQvPgDp6rErdUhzSZTCz2JBFbV5YQF_ZV29TirI'
 
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20))
+
+// Server-side client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Browser client with SSR support
+export function createSupabaseClient() {
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+}
 
 // Database types (will be auto-generated later)
 export interface Database {
