@@ -7,28 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, BarChart3, Shield, Zap, ArrowRight, Clock, CheckCircle, XCircle, Wrench, Settings } from 'lucide-react'
 import CreateProjectModal from '@/components/CreateProjectModal'
+import { getProjects, type Project } from '@/lib/database'
 
-interface Project {
-  id: string
-  name: string
-  description?: string
-  createdAt: string
-  _count: {
-    promptVersions: number
-    scenarioSuites: number
-    evalRuns: number
-  }
-  promptVersions: Array<{
-    id: string
-    name: string
-    createdAt: string
-  }>
-  evalRuns: Array<{
-    id: string
-    status: string
-    finishedAt?: string
-  }>
-}
+// Remove the old interface since we're importing it from database.ts
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -41,11 +22,8 @@ export default function DashboardPage() {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/projects')
-      const data = await response.json()
-      if (data.success) {
-        setProjects(data.data)
-      }
+      const data = await getProjects()
+      setProjects(data)
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {

@@ -5,8 +5,8 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'System Prompt Analysis & Auto-Repair Tool',
-  description: 'Production-ready system prompt analysis, evaluation, and auto-repair platform',
+  title: 'PromptFix - AI Prompt Analysis & Optimization',
+  description: 'AI-powered prompt analysis, testing, and optimization platform for better LLM performance',
 }
 
 export default function RootLayout({

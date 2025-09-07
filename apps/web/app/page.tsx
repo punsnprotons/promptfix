@@ -18,7 +18,7 @@ export default function HomePage() {
               <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center">
                 <Zap className="h-5 w-5 text-black" />
               </div>
-              <h1 className="text-xl font-bold text-white">System Prompt Tool</h1>
+              <h1 className="text-xl font-bold text-white">PromptFix</h1>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild className="text-gray-300 hover:text-white hover:bg-gray-800">
@@ -36,12 +36,12 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl font-bold text-white mb-6">
-            System Prompt Analysis &{' '}
-            <span className="text-orange-500">Auto-Repair</span>
+            PromptFix {' '}
+            <span className="text-orange-500">AI Platform</span>
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Production-ready web app that ingests system prompts, auto-generates user interaction scenarios, 
-            runs evaluations across selected LLMs, and proposes iterative rewrites until pass criteria are met.
+            AI-powered prompt analysis, testing, and optimization platform. Automatically generate test scenarios, 
+            run evaluations across multiple LLMs, and get AI-powered suggestions to improve your prompts.
           </p>
         </div>
       </section>
@@ -224,7 +224,7 @@ export default function HomePage() {
       <footer className="border-t border-gray-800 bg-black">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-gray-300">
-            <p>&copy; 2024 System Prompt Tool. Built for the AI engineering community.</p>
+            <p>&copy; 2024 PromptFix. Built for the AI engineering community.</p>
           </div>
         </div>
       </footer>

@@ -1,7 +1,7 @@
 {
-  "name": "system-prompt-tool",
+  "name": "promptfix",
   "version": "1.0.0",
-  "description": "System Prompt Analysis & Auto-Repair Web App",
+  "description": "PromptFix - AI-powered prompt analysis, testing, and optimization platform",
   "private": true,
   "workspaces": [
     "packages/*",
