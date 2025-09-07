@@ -1,143 +1,239 @@
-# System Prompt Analysis & Auto-Repair Tool
+# PromptFix 🚀
 
-A production-ready web application that ingests system prompts, auto-generates user interaction scenarios, runs evaluations across selected LLMs, discovers edge cases via adaptive and adversarial testing, and proposes iterative system-prompt rewrites until pass criteria are met.
+**AI-powered prompt analysis, testing, and optimization platform for better LLM performance.**
+
+PromptFix is a production-ready web application that helps you analyze, test, and optimize your AI prompts across multiple LLM providers. It automatically generates test scenarios, runs comprehensive evaluations, performs security scans, and provides AI-powered suggestions to improve your prompts.
+
+![PromptFix Banner](https://img.shields.io/badge/PromptFix-AI%20Platform-orange?style=for-the-badge)
+
+## ✨ Features
+
+### 🎯 **Auto Pipeline Mode**
+- **One-click optimization**: Automatically runs your prompt through all analysis stages
+- **Real-time progress**: See results as each step completes
+- **Smart recommendations**: Get AI-powered suggestions for improvement
+
+### 🧪 **Scenario Generation**
+- **Diverse test cases**: Automatically generate user intent, constraint, adversarial, and edge case scenarios
+- **Coverage metrics**: Ensure comprehensive testing across different use cases
+- **Adaptive exploration**: Smart scenario discovery for maximum defect detection
+
+### 📊 **Multi-LLM Evaluation**
+- **Provider support**: OpenAI, Anthropic, Groq, and more
+- **LLM-as-judge**: Automated quality assessment
+- **Performance metrics**: Response time, token usage, and cost tracking
+- **Comparative analysis**: Side-by-side provider comparison
+
+### 🛡️ **Security Scanning**
+- **Red-team testing**: Automated security vulnerability detection
+- **Attack vectors**: Prompt injection, data exfiltration, jailbreak attempts
+- **Compliance**: OWASP and NIST-style security mappings
+- **Risk assessment**: Detailed vulnerability reports
+
+### 🔧 **Prompt Repair**
+- **AI-powered analysis**: Intelligent prompt improvement suggestions
+- **Explainable diffs**: Clear before/after comparisons with rationale
+- **Focus areas**: Clarity, safety, performance, consistency optimization
+- **Version control**: Track prompt iterations and improvements
+
+### 🎛️ **Model Adapters**
+- **Provider optimization**: Create model-specific prompt variations
+- **Migration support**: Seamless switching between LLM providers
+- **Regression testing**: Ensure consistent behavior across models
+- **Performance tuning**: Provider-specific optimizations
+
+### 💾 **Real Database Integration**
+- **Supabase backend**: Production-ready PostgreSQL database
+- **Real-time data**: Live project management and results storage
+- **Row-level security**: Secure multi-user data isolation
+- **Scalable architecture**: Built for production workloads
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (free tier available)
+- API keys for your preferred LLM providers
 
-- **Node.js 18+** - [Download](https://nodejs.org/)
-- **PostgreSQL 14+** - [Download](https://www.postgresql.org/download/)
-- **Redis** - [Download](https://redis.io/download)
-
-### Installation
-
-1. **Clone and setup**:
-   ```bash
-   git clone <repository-url>
-   cd system-prompt-tool
-   ./setup.sh
-   ```
-
-2. **Configure environment**:
-   ```bash
-   cp env.example .env.local
-   # Edit .env.local with your API keys
-   ```
-
-3. **Start development**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Open the app**: http://localhost:3000
-
-## ✨ Features
-
-### Core Differentiators
-
-- **🎯 System Prompt Copilot**: Automatically synthesize realistic user journeys, constraints, and adversarial probes
-- **🔄 Multi-LLM Conformance**: Normalize behavior across Anthropic/OpenAI/Gemini/Llama with model-specific adapters  
-- **📊 Coverage-First Testing**: Maximize defect discovery per token with adaptive exploration
-- **🛡️ Security-Grade Guardrails**: Red-teaming and fuzzing with adaptive attacks
-- **🔧 Auto-Repair**: LLM-written suggestions with explainable diffs and rationale
-
-### Supported Providers
-
-- **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo
-- **Anthropic**: Claude-3 Opus, Claude-3 Sonnet, Claude-3 Haiku  
-- **Google**: Gemini Pro
-- **Azure OpenAI**: All OpenAI models
-- **AWS Bedrock**: Claude models
-- **Ollama**: Local models
-
-## 🖥️ CLI Usage
-
+### 1. Clone and Install
 ```bash
-# Install CLI globally
-npm install -g @system-prompt-tool/cli
-
-# Initialize project
-spt init
-
-# Generate scenarios
-spt generate-scenarios --prompt ./prompts/system.txt
-
-# Run evaluation  
-spt run-eval --project-id "proj_123"
-
-# Security scan
-spt run-redteam --project-id "proj_123"
-
-# Check CI gates
-spt check-gates --project-id "proj_123" --exit-on-fail
+git clone https://github.com/punsnprotons/system-prompt-analysis-app.git
+cd system-prompt-analysis-app
+npm install
 ```
 
-## 🔄 CI/CD Integration
+### 2. Set Up Supabase Database
+1. Go to [Supabase](https://supabase.com) and create a new project
+2. In the Supabase SQL Editor, run the schema from `supabase-schema.sql`
+3. Copy your project URL and API keys from Settings > API
 
-Ready-to-use GitHub Actions workflows in `examples/ci/`:
+### 3. Configure Environment Variables
+```bash
+cd apps/web
+cp env.local .env.local
+```
 
-- **`run-evals.yml`**: Check thresholds, upload artifacts, fail PR if gates break
-- **`nightly-redteam.yml`**: Run adaptive red-team with token budget cap
+Edit `.env.local` with your actual credentials:
+```env
+# Supabase Configuration
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+DATABASE_URL=postgresql://postgres:your-password@db.your-project-id.supabase.co:5432/postgres
+
+# LLM Provider APIs
+GROQ_API_KEY=your-groq-api-key
+OPENAI_API_KEY=your-openai-api-key
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# NextAuth (generate a random secret)
+NEXTAUTH_SECRET=your-random-secret-key
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 4. Run the Application
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to start using PromptFix!
 
 ## 🏗️ Architecture
 
-### Monorepo Structure
+### Tech Stack
+- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Database**: Supabase (PostgreSQL) with Row Level Security
+- **Authentication**: NextAuth.js (ready for implementation)
+- **LLM Integration**: OpenAI, Anthropic, Groq SDKs
+- **State Management**: React Query for server state
 
-```
-system-prompt-tool/
-├── apps/
-│   ├── web/                 # Next.js frontend
-│   └── api/                 # Express API server  
-├── packages/
-│   ├── database/            # Prisma schema
-│   ├── shared/              # Shared types
-│   ├── providers/           # LLM providers
-│   ├── workers/             # Background jobs
-│   └── cli/                 # Command-line interface
-└── examples/
-    └── ci/                  # CI/CD templates
-```
+### Database Schema
+- **projects**: Core project management
+- **evaluation_runs**: LLM evaluation results and metrics
+- **scenario_suites**: Generated test scenario collections
+- **prompt_versions**: Version control for prompt iterations
+- **security_scans**: Security vulnerability scan results
+- **model_adapters**: Provider-specific optimizations
 
-### Technology Stack
+## 🎯 Usage Guide
 
-- **Frontend**: Next.js 14, React Server Components, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js, TypeScript, Express, Prisma ORM
-- **Database**: PostgreSQL
-- **Queue**: BullMQ + Redis
-- **Auth**: NextAuth.js
-- **Build**: Turborepo
+### Creating Your First Project
+1. **Homepage**: Enter your system prompt or use a random example
+2. **Auto Pipeline**: Click "Start Auto Pipeline Analysis" for automated optimization
+3. **Manual Mode**: Use individual tools (Scenarios, Evaluation, Security, Repair)
 
-## 📚 Documentation
+### Auto Pipeline Workflow
+1. **Scenario Generation**: Creates diverse test cases
+2. **LLM Evaluation**: Tests across multiple providers
+3. **Security Scanning**: Checks for vulnerabilities
+4. **Prompt Repair**: AI-powered improvement suggestions
+5. **Model Adaptation**: Provider-specific optimizations
 
-- **[Full Documentation](./docs/README.md)** - Comprehensive setup and usage guide
-- **[API Reference](./docs/api.md)** - REST API documentation  
-- **[CLI Reference](./docs/cli.md)** - Command-line interface guide
-- **[Deployment Guide](./docs/deployment.md)** - Production deployment
+### Managing Projects
+- **Dashboard**: View all projects and their status
+- **Project Details**: Drill down into specific results
+- **Version History**: Track prompt improvements over time
+- **Export/Import**: Share configurations and results
 
-## 🎯 Demo Workflow
+## 🔧 Configuration
 
-1. **Create project** → Add system prompt
-2. **Generate scenarios** → Auto-create test cases
-3. **Run evaluation** → Test across multiple LLMs
-4. **View results** → Pass/fail rates, coverage metrics
-5. **Security scan** → Red-team testing
-6. **Auto-repair** → LLM-suggested improvements
-7. **CI/CD gates** → Automated quality checks
+### LLM Providers
+Configure your preferred providers in the environment variables:
+- **Groq**: Fast inference with Llama models
+- **OpenAI**: GPT-4, GPT-3.5-turbo
+- **Anthropic**: Claude models
+
+### Security Settings
+- Row Level Security (RLS) enabled by default
+- API key validation and rate limiting
+- Secure credential storage in environment variables
+
+### Performance Tuning
+- Database indexes for optimal query performance
+- Connection pooling via Supabase
+- Efficient API design with minimal round trips
+
+## 🛡️ Security Features
+
+### Red Team Testing
+- **Prompt Injection**: Tests for malicious input handling
+- **Data Exfiltration**: Checks for information leakage
+- **Jailbreak Attempts**: Validates safety guardrails
+- **Role Confusion**: Tests for unauthorized behavior
+
+### Compliance
+- OWASP AI Security guidelines
+- NIST AI Risk Management Framework
+- Privacy-preserving design patterns
+
+## 📈 Monitoring & Analytics
+
+### Built-in Metrics
+- **Performance**: Response times, token usage, costs
+- **Quality**: LLM-as-judge scores, consistency metrics
+- **Security**: Vulnerability counts, risk assessments
+- **Usage**: API call tracking, provider utilization
+
+### Export Options
+- JSON/CSV data export
+- Detailed PDF reports
+- API integration for external tools
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our contributing guidelines:
+
 1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Make changes and test: `npm run test`
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing-feature`
-6. Open Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📄 License
+### Development Setup
+```bash
+# Install dependencies
+npm install
 
-MIT License - see [LICENSE](LICENSE) file for details.
+# Run development server
+npm run dev
+
+# Run type checking
+npm run type-check
+
+# Run linting
+npm run lint
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: Check our [Wiki](../../wiki) for detailed guides
+- **Issues**: Report bugs or request features via [GitHub Issues](../../issues)
+- **Discussions**: Join our [GitHub Discussions](../../discussions) for community support
+
+## 🚧 Roadmap
+
+### Upcoming Features
+- [ ] **Authentication**: Complete NextAuth.js integration
+- [ ] **Team Collaboration**: Multi-user project sharing
+- [ ] **CI/CD Integration**: GitHub Actions, GitLab CI
+- [ ] **Advanced Analytics**: Custom metrics and dashboards
+- [ ] **API Endpoints**: REST API for external integrations
+- [ ] **Prompt Templates**: Pre-built prompt libraries
+- [ ] **A/B Testing**: Automated prompt variant testing
+
+### Provider Integrations
+- [ ] **Google AI**: Gemini models
+- [ ] **AWS Bedrock**: Claude, Titan, Jurassic
+- [ ] **Azure OpenAI**: Enterprise-grade OpenAI
+- [ ] **Ollama**: Local model support
+- [ ] **Hugging Face**: Open source models
 
 ---
 
-**Built for the AI engineering community** 🚀
+**Built with ❤️ for the AI engineering community**
+
+*PromptFix helps you build more reliable, secure, and performant AI applications through comprehensive prompt analysis and optimization.*
