@@ -5,11 +5,11 @@ import Groq from 'groq-sdk'
 import OpenAI from 'openai'
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || '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'
+  apiKey: process.env.GROQ_API_KEY!
 })
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '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'
+  apiKey: process.env.OPENAI_API_KEY!
 })
 
 export async function POST(request: NextRequest) {
