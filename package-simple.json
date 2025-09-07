@@ -1,0 +1,17 @@
+{
+  "name": "system-prompt-tool",
+  "version": "1.0.0",
+  "description": "System Prompt Analysis & Auto-Repair Web App",
+  "private": true,
+  "scripts": {
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "start": "cd apps/web && npm run start",
+    "lint": "cd apps/web && npm run lint",
+    "type-check": "cd apps/web && npm run type-check",
+    "setup": "npm install && cd apps/web && npm install"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "/not-found": "app/not-found.js",
+  "/page": "app/page.js",
+  "/auto-pipeline/page": "app/auto-pipeline/page.js",
+  "/api/auto-pipeline/route": "app/api/auto-pipeline/route.js",
+  "/api/projects/route": "app/api/projects/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+}

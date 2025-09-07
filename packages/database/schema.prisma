@@ -1,0 +1,315 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  projects Project[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  image          String?
+  emailVerified  DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  accounts       Account[]
+  sessions       Session[]
+  projects       Project[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdById    String
+  createdBy      User @relation(fields: [createdById], references: [id])
+
+  providerConfigs ProviderConfig[]
+  promptVersions  PromptVersion[]
+  scenarioSuites  ScenarioSuite[]
+  evalRuns        EvalRun[]
+  redTeamRuns     RedTeamRun[]
+  migrationRuns   MigrationRun[]
+  policyPacks     PolicyPack[]
+  thresholdGates  ThresholdGate[]
+
+  @@map("projects")
+}
+
+model ProviderConfig {
+  id          String   @id @default(cuid())
+  provider    String   // "openai", "anthropic", "google", etc.
+  model       String   // "gpt-4", "claude-3", etc.
+  apiKeyRef   String   // Reference to encrypted API key
+  rateLimits  Json?    // Rate limit configuration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("provider_configs")
+}
+
+model PromptVersion {
+  id          String   @id @default(cuid())
+  name        String
+  content     String   @db.Text
+  metadata    Json?    // Additional metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id])
+  
+  parentId    String?  // For versioning/tracking changes
+  parent      PromptVersion? @relation("PromptVersionParent", fields: [parentId], references: [id])
+  children    PromptVersion[] @relation("PromptVersionParent")
+
+  adapters    PromptAdapter[]
+  scenarioSuites ScenarioSuite[]
+
+  @@map("prompt_versions")
+}
+
+model PromptAdapter {
+  id          String   @id @default(cuid())
+  provider    String
+  model       String
+  content     String   @db.Text
+  rationale   String?  @db.Text
+  diff        Json?    // Diff from canonical version
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  promptVersionId String
+  promptVersion   PromptVersion @relation(fields: [promptVersionId], references: [id], onDelete: Cascade)
+
+  @@map("prompt_adapters")
+}
+
+model ScenarioSuite {
+  id              String   @id @default(cuid())
+  name            String
+  version         String
+  source          String   // "generated", "imported", "manual"
+  coverageSnapshot Json?   // Coverage metrics snapshot
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  projectId       String
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  promptVersionId String?
+  promptVersion   PromptVersion? @relation(fields: [promptVersionId], references: [id])
+
+  scenarios       Scenario[]
+  evalRuns        EvalRun[]
+  redTeamRuns     RedTeamRun[]
+
+  @@map("scenario_suites")
+}
+
+model Scenario {
+  id          String   @id @default(cuid())
+  type        String   // "user_intent", "constraint", "adversarial", "edge_case"
+  intent      String?  // What the user is trying to accomplish
+  inputsJson  Json     // Input data for the scenario
+  checksJson  Json     // Validation checks to perform
+  adversarial Boolean  @default(false)
+  tags        String[] // Tags for categorization
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  suiteId     String
+  suite       ScenarioSuite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+
+  evalCases   EvalCase[]
+
+  @@map("scenarios")
+}
+
+model EvalRun {
+  id          String   @id @default(cuid())
+  status      String   // "pending", "running", "completed", "failed"
+  costStatsJson Json?  // Cost statistics
+  startedAt   DateTime @default(now())
+  finishedAt  DateTime?
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  suiteId     String
+  suite       ScenarioSuite @relation(fields: [suiteId], references: [id])
+
+  providers   String[] // List of provider:model combinations
+  evalCases   EvalCase[]
+  coverageReport CoverageReport?
+
+  @@map("eval_runs")
+}
+
+model EvalCase {
+  id          String   @id @default(cuid())
+  output      String?  @db.Text
+  scoresJson  Json?    // Scoring results
+  pass        Boolean?
+  latencyMs   Int?
+  cost        Decimal? @db.Decimal(10, 6)
+  createdAt   DateTime @default(now())
+
+  runId       String
+  run         EvalRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  
+  scenarioId  String
+  scenario    Scenario @relation(fields: [scenarioId], references: [id])
+
+  provider    String
+  model       String
+
+  @@map("eval_cases")
+}
+
+model CoverageReport {
+  id                String   @id @default(cuid())
+  intentCoverage    Decimal  @db.Decimal(5, 2) // Percentage
+  constraintCoverage Decimal @db.Decimal(5, 2)
+  failureCoverage   Decimal  @db.Decimal(5, 2)
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now())
+
+  runId             String   @unique
+  run               EvalRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@map("coverage_reports")
+}
+
+model RedTeamRun {
+  id          String   @id @default(cuid())
+  attacksUsed String[] // List of attack types used
+  bypassRate  Decimal  @db.Decimal(5, 2) // Percentage of successful bypasses
+  reportJson  Json?    // Detailed vulnerability report
+  startedAt   DateTime @default(now())
+  finishedAt  DateTime?
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  suiteId     String
+  suite       ScenarioSuite @relation(fields: [suiteId], references: [id])
+
+  @@map("red_team_runs")
+}
+
+model MigrationRun {
+  id              String   @id @default(cuid())
+  sourceModel     String
+  targetModel     String
+  driftSummaryJson Json?   // Summary of behavioral drifts
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+
+  projectId       String
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("migration_runs")
+}
+
+model PolicyPack {
+  id          String   @id @default(cuid())
+  name        String
+  checksJson  Json     // Policy check definitions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("policy_packs")
+}
+
+model ThresholdGate {
+  id          String   @id @default(cuid())
+  configJson  Json     // Threshold configuration
+  lastStatus  String?  // "pass", "fail", "unknown"
+  lastChecked DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("threshold_gates")
+}

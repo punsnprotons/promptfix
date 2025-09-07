@@ -1,0 +1,158 @@
+name: Nightly Red-Team Scan
+
+on:
+  schedule:
+    # Run every night at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  redteam-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install System Prompt Tool CLI
+      run: npm install -g @system-prompt-tool/cli
+      
+    - name: Run red-team scan
+      run: spt run-redteam --project-id ${{ secrets.PROJECT_ID }} --attacks "jailbreak,prompt_injection,data_exfiltration,role_confusion"
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report-${{ github.run_number }}
+        path: security-reports/
+        retention-days: 90
+        
+    - name: Create security summary
+      id: security-summary
+      run: |
+        # Parse the latest security report
+        REPORT_FILE=$(ls -t security-reports/redteam-report-*.json | head -n1)
+        
+        if [ -f "$REPORT_FILE" ]; then
+          VULNERABILITIES=$(jq '.summary.totalVulnerabilities' "$REPORT_FILE")
+          BYPASS_RATE=$(jq '.metadata.bypassRate' "$REPORT_FILE")
+          CRITICAL_VULNS=$(jq '.summary.criticalVulnerabilities' "$REPORT_FILE")
+          HIGH_VULNS=$(jq '.summary.highVulnerabilities' "$REPORT_FILE")
+          
+          echo "vulnerabilities=$VULNERABILITIES" >> $GITHUB_OUTPUT
+          echo "bypass_rate=$BYPASS_RATE" >> $GITHUB_OUTPUT
+          echo "critical_vulns=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+          echo "high_vulns=$HIGH_VULNS" >> $GITHUB_OUTPUT
+        else
+          echo "vulnerabilities=0" >> $GITHUB_OUTPUT
+          echo "bypass_rate=0" >> $GITHUB_OUTPUT
+          echo "critical_vulns=0" >> $GITHUB_OUTPUT
+          echo "high_vulns=0" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Post security summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const vulnerabilities = ${{ steps.security-summary.outputs.vulnerabilities }};
+          const bypassRate = ${{ steps.security-summary.outputs.bypass_rate }};
+          const criticalVulns = ${{ steps.security-summary.outputs.critical_vulns }};
+          const highVulns = ${{ steps.security-summary.outputs.high_vulns }};
+          
+          let status = '✅';
+          let statusText = 'All clear';
+          
+          if (criticalVulns > 0) {
+            status = '🚨';
+            statusText = 'Critical vulnerabilities detected';
+          } else if (highVulns > 0) {
+            status = '⚠️';
+            statusText = 'High-severity vulnerabilities detected';
+          } else if (vulnerabilities > 0) {
+            status = '🔍';
+            statusText = 'Minor vulnerabilities detected';
+          }
+          
+          const comment = `## ${status} Nightly Security Scan Results
+          
+**Status:** ${statusText}
+
+**Summary:**
+- Total Vulnerabilities: ${vulnerabilities}
+- Critical: ${criticalVulns}
+- High: ${highVulns}
+- Bypass Rate: ${(bypassRate * 100).toFixed(1)}%
+
+**Recommendations:**
+${criticalVulns > 0 ? '- 🚨 **URGENT**: Address critical vulnerabilities immediately' : ''}
+${highVulns > 0 ? '- ⚠️ **HIGH**: Review and fix high-severity issues' : ''}
+${vulnerabilities > 0 ? '- 🔍 **MEDIUM**: Consider addressing minor vulnerabilities' : ''}
+${vulnerabilities === 0 ? '- ✅ **GOOD**: No vulnerabilities detected' : ''}
+
+**Next Steps:**
+- Review the detailed security report in the artifacts
+- Address any critical or high-severity vulnerabilities
+- Consider implementing additional security measures
+
+*This scan was performed automatically as part of our nightly security monitoring.*`;
+          
+          // Create a new issue if there are critical vulnerabilities
+          if (criticalVulns > 0) {
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Critical Security Vulnerabilities Detected - ${new Date().toISOString().split('T')[0]}`,
+              body: comment,
+              labels: ['security', 'critical', 'urgent']
+            });
+          }
+          
+          // Post comment to the latest commit
+          github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: context.sha,
+            body: comment
+          });
+          
+    - name: Notify on critical vulnerabilities
+      if: steps.security-summary.outputs.critical_vulns > 0
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Send notification to security team (customize as needed)
+          console.log('🚨 Critical vulnerabilities detected - notification sent to security team');
+          
+          // You can integrate with Slack, Discord, email, etc. here
+          // Example: Send to Slack webhook
+          // const webhook = process.env.SLACK_WEBHOOK_URL;
+          // if (webhook) {
+          //   await fetch(webhook, {
+          //     method: 'POST',
+          //     headers: { 'Content-Type': 'application/json' },
+          //     body: JSON.stringify({
+          //       text: `🚨 Critical security vulnerabilities detected in ${context.repo.repo}`,
+          //       attachments: [{
+          //         color: 'danger',
+          //         fields: [{
+          //           title: 'Critical Vulnerabilities',
+          //           value: ${{ steps.security-summary.outputs.critical_vulns }},
+          //           short: true
+          //         }]
+          //       }]
+          //     })
+          //   });
+          // }
