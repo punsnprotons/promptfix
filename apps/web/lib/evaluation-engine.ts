@@ -389,8 +389,8 @@ export class EvaluationEngine {
     if (process.env.ANTHROPIC_API_KEY) {
       this.providers.set('anthropic', new AnthropicProvider(process.env.ANTHROPIC_API_KEY))
     }
-    if (process.env.GROQ_API_KEY || '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') {
-      this.providers.set('groq', new GroqProvider(process.env.GROQ_API_KEY || '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'))
+    if (process.env.GROQ_API_KEY) {
+      this.providers.set('groq', new GroqProvider(process.env.GROQ_API_KEY))
     }
   }
 

@@ -84,8 +84,8 @@ export class PromptRepairEngine {
   private anthropic?: Anthropic
 
   constructor() {
-    if (process.env.GROQ_API_KEY || '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') {
-      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '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' })
+    if (process.env.GROQ_API_KEY) {
+      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     }
     if (process.env.OPENAI_API_KEY) {
       this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -480,8 +480,8 @@ export class ModelAdapterEngine {
   private groq?: Groq
 
   constructor() {
-    if (process.env.GROQ_API_KEY || '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') {
-      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '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' })
+    if (process.env.GROQ_API_KEY) {
+      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     }
   }
 

@@ -75,8 +75,8 @@ export class ScenarioGenerator {
     if (process.env.ANTHROPIC_API_KEY) {
       this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     }
-    if (process.env.GROQ_API_KEY || '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') {
-      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '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' })
+    if (process.env.GROQ_API_KEY) {
+      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     }
   }
 

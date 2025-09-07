@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       userMessage: body.userMessage || 'Hello, how can you help me?',
       expectedBehavior: body.expectedBehavior,
       providers: body.providers || [
-        { name: 'groq', model: 'llama-3.1-70b-versatile', apiKey: process.env.GROQ_API_KEY || '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' },
+        { name: 'groq', model: 'llama-3.1-70b-versatile', apiKey: process.env.GROQ_API_KEY },
         { name: 'openai', model: 'gpt-4', apiKey: process.env.OPENAI_API_KEY || '' },
         { name: 'anthropic', model: 'claude-3-sonnet', apiKey: process.env.ANTHROPIC_API_KEY || '' }
       ].filter(p => p.apiKey)
