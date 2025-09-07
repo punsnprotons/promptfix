@@ -107,7 +107,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {projects.reduce((acc, p) => acc + (p._count?.evalRuns || 0), 0)}
+                {projects.reduce((acc, p) => acc + ((p as any)._count?.evalRuns || 0), 0)}
               </div>
               <p className="text-xs text-gray-400">
                 Running evaluations
@@ -122,7 +122,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {projects.reduce((acc, p) => acc + (p._count?.promptVersions || 0), 0)}
+                {projects.reduce((acc, p) => acc + ((p as any)._count?.promptVersions || 0), 0)}
               </div>
               <p className="text-xs text-gray-400">
                 Across all projects
@@ -159,25 +159,25 @@ export default function DashboardPage() {
                         {project.description}
                       </CardDescription>
                     </div>
-                    {project._count?.evalRuns > 0 && getStatusIcon('completed')}
+                    {(project as any)._count?.evalRuns > 0 && getStatusIcon('completed')}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Prompt Versions</span>
-                      <span className="font-medium text-white">{project._count?.promptVersions || 0}</span>
+                      <span className="font-medium text-white">{(project as any)._count?.promptVersions || 0}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Scenario Suites</span>
-                      <span className="font-medium text-white">{project._count?.scenarioSuites || 0}</span>
+                      <span className="font-medium text-white">{(project as any)._count?.scenarioSuites || 0}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Eval Runs</span>
-                      <span className="font-medium text-white">{project._count?.evalRuns || 0}</span>
+                      <span className="font-medium text-white">{(project as any)._count?.evalRuns || 0}</span>
                     </div>
                     
-                    {project._count?.evalRuns > 0 && (
+                    {(project as any)._count?.evalRuns > 0 && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-400">Last Run</span>
                         <Badge variant="outline" className="border-orange-500 text-orange-500">Completed</Badge>

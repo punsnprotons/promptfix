@@ -164,15 +164,23 @@ Guidelines:
           name: 'Auto Pipeline Analysis',
           description: 'Comprehensive analysis and optimization of system prompt',
           steps: [
-            { id: 'scenario_generation', name: 'Scenario Generation', description: 'Generate diverse test scenarios for comprehensive coverage', status: 'pending' },
-            { id: 'evaluation', name: 'LLM Evaluation', description: 'Test prompt across multiple LLM providers', status: 'pending' },
-            { id: 'security_scan', name: 'Security Scan', description: 'Red-team testing for vulnerabilities', status: 'pending' },
-            { id: 'prompt_repair', name: 'Prompt Repair', description: 'AI-powered analysis and improvement suggestions', status: 'pending' },
-            { id: 'model_adapter', name: 'Model Adapter', description: 'Create provider-specific optimizations', status: 'pending' },
+            { id: 'scenario_generation', name: 'Scenario Generation', description: 'Generate diverse test scenarios for comprehensive coverage', status: 'pending' as const },
+            { id: 'evaluation', name: 'LLM Evaluation', description: 'Test prompt across multiple LLM providers', status: 'pending' as const },
+            { id: 'security_scan', name: 'Security Scan', description: 'Red-team testing for vulnerabilities', status: 'pending' as const },
+            { id: 'prompt_repair', name: 'Prompt Repair', description: 'AI-powered analysis and improvement suggestions', status: 'pending' as const },
+            { id: 'model_adapter', name: 'Model Adapter', description: 'Create provider-specific optimizations', status: 'pending' as const },
           ],
           originalPrompt,
           targetProvider,
           targetModel,
+          options: {
+            generateScenarios,
+            runEvaluation,
+            securityScan,
+            promptRepair,
+            createAdapter,
+            scenarioCount: 18
+          },
           status: 'running',
           startedAt: new Date().toISOString(),
           totalCost: 0,
@@ -284,7 +292,7 @@ Guidelines:
           // Update result with step completion
           const stepResult = stepData.data
           const stepConfig = stepResult.config
-          const completedStep = stepConfig.steps.find(s => s.status === 'completed')
+          const completedStep = stepConfig.steps.find((s: any) => s.status === 'completed')
           
           if (completedStep) {
             totalCost += completedStep.cost || 0

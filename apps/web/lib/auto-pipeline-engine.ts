@@ -364,8 +364,8 @@ export class AutoPipelineEngine {
           step.duration = new Date(step.finishedAt).getTime() - new Date(step.startedAt).getTime()
           step.cost = 0.001 // Estimated cost for scenario generation
           step.tokens = finalScenarios.length * 50 // Estimated tokens
-          step.scenariosGenerated = finalScenarios.length // Store count for evaluation step
-          step.actuallyGenerated = true // Flag to indicate scenarios were actually generated
+          (step as any).scenariosGenerated = finalScenarios.length // Store count for evaluation step
+          (step as any).actuallyGenerated = true // Flag to indicate scenarios were actually generated
           config.totalCost += step.cost
           config.totalTokens += step.tokens
           config.summary.completedSteps++
@@ -507,19 +507,19 @@ export class AutoPipelineEngine {
             const scenarioGenerationWasAttempted = config.options.generateScenarios || 
                                                   scenarioStep?.status === 'completed' || 
                                                   scenarioStep?.status === 'running' ||
-                                                  scenarioStep?.actuallyGenerated === true ||
-                                                  (scenarioStep?.scenariosGenerated && scenarioStep.scenariosGenerated > 0) ||
+                                                  (scenarioStep as any)?.actuallyGenerated === true ||
+                                                  ((scenarioStep as any)?.scenariosGenerated && (scenarioStep as any).scenariosGenerated > 0) ||
                                                   (scenarioStep && Object.keys(scenarioStep).length > 3) // Step has more than basic properties
             
             console.log('scenarioGenerationWasAttempted:', scenarioGenerationWasAttempted)
-            console.log('scenarioStep?.actuallyGenerated:', scenarioStep?.actuallyGenerated)
-            console.log('scenarioStep?.scenariosGenerated:', scenarioStep?.scenariosGenerated)
+            console.log('scenarioStep?.actuallyGenerated:', (scenarioStep as any)?.actuallyGenerated)
+            console.log('scenarioStep?.scenariosGenerated:', (scenarioStep as any)?.scenariosGenerated)
             
             // ALWAYS generate scenarios if scenario generation was attempted, regardless of current config state
             if (scenarioGenerationWasAttempted) {
               console.log('Scenario generation was attempted, generating fresh comprehensive scenarios for evaluation')
               // Use the actual generated count if available, otherwise fall back to configured count
-              const scenarioCount = scenarioStep?.scenariosGenerated || config.options.scenarioCount || 18
+              const scenarioCount = (scenarioStep as any)?.scenariosGenerated || config.options.scenarioCount || 18
               console.log('Using scenario count for fresh generation:', scenarioCount)
               
               // IMPORTANT: Generate scenarios using the SAME prompt as the original generation
