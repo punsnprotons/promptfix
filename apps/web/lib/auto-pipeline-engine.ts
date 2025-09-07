@@ -361,11 +361,11 @@ export class AutoPipelineEngine {
           step.results = finalScenarios
           step.status = 'completed'
           step.finishedAt = new Date().toISOString()
-          step.duration = new Date(step.finishedAt).getTime() - new Date(step.startedAt).getTime()
+          step.duration = new Date(step.finishedAt).getTime() - new Date(step.startedAt!).getTime()
           step.cost = 0.001 // Estimated cost for scenario generation
-          step.tokens = finalScenarios.length * 50 // Estimated tokens
-          (step as any).scenariosGenerated = finalScenarios.length // Store count for evaluation step
-          (step as any).actuallyGenerated = true // Flag to indicate scenarios were actually generated
+          step.tokens = finalScenarios.length * 50
+          ;(step as any).scenariosGenerated = finalScenarios.length
+          ;(step as any).actuallyGenerated = true
           config.totalCost += step.cost
           config.totalTokens += step.tokens
           config.summary.completedSteps++
@@ -415,8 +415,8 @@ export class AutoPipelineEngine {
           console.log('Scenario step results is array:', Array.isArray(scenarioStep?.results))
           console.log('Scenario step results length:', scenarioStep?.results?.length)
           console.log('Scenario step results keys:', scenarioStep?.results ? Object.keys(scenarioStep.results) : 'none')
-          console.log('Scenario step actuallyGenerated:', scenarioStep?.actuallyGenerated)
-          console.log('Scenario step scenariosGenerated:', scenarioStep?.scenariosGenerated)
+          console.log('Scenario step actuallyGenerated:', (scenarioStep as any)?.actuallyGenerated)
+          console.log('Scenario step scenariosGenerated:', (scenarioStep as any)?.scenariosGenerated)
           
           // CRITICAL DEBUG: Check all steps to see if scenarios are stored elsewhere
           console.log('=== ALL STEPS DEBUG ===')
@@ -452,8 +452,8 @@ export class AutoPipelineEngine {
           if (config.options.generateScenarios && scenarioStep?.status === 'completed' && scenarios.length > 0) {
             console.log(`FOUND SCENARIOS FROM CURRENT RUN: ${scenarios.length} scenarios available for evaluation`)
             console.log('Sample scenarios from current run:')
-            scenarios.slice(0, 3).forEach((scenario, index) => {
-              console.log(`  ${index + 1}. ${scenario.id}: "${scenario.userMessage}"`)
+            scenarios.slice(0, 3).forEach((scenario: any, index: number) => {
+              console.log(`  ${index + 1}. ${scenario.id}: "${(scenario as any).userMessage || (scenario as any).description || 'scenario'}"`)
             })
           }
           
@@ -541,7 +541,7 @@ export class AutoPipelineEngine {
                   // Log first few scenarios to verify they're the right type and content
                   console.log('Sample generated scenarios for evaluation:')
                   freshScenarios.slice(0, 3).forEach((scenario, index) => {
-                    console.log(`  ${index + 1}. ${scenario.id}: "${scenario.userMessage}"`)
+                    console.log(`  ${index + 1}. ${scenario.id}: "${(scenario as any).userMessage || (scenario as any).description || 'scenario'}"`)
                   })
                 } else {
                   // Fall back to static scenarios if generation fails

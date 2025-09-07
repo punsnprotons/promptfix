@@ -303,7 +303,7 @@ Return a JSON array of suggestions with this structure:
           
           // Fallback 2: Try to extract just the suggestions array
           try {
-            const suggestionsMatch = cleanedOutput.match(/"suggestions"\s*:\s*\[(.*?)\]/s)
+            const suggestionsMatch = cleanedOutput.match(/"suggestions"\s*:\s*\[([\s\S]*?)\]/)
             if (suggestionsMatch) {
               const suggestionsJson = `{"suggestions": [${suggestionsMatch[1]}]}`
               parsed = JSON.parse(suggestionsJson)
